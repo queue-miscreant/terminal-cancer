@@ -4,7 +4,7 @@ This package is meant to make IRC-like terminal display easier.
 
 The package itself is split up into multple modules:
 1. wcwidth
-	* This module implements the C function wcwidth. This will not be covered in this documentation, please check [the original source code](https://github.com/jquast/wcwidth).
+	* This module implements the C function wcwidth. This will not be covered in this documentation, so please check [the original source code](https://github.com/jquast/wcwidth).
 2. display.py
 	* Very basic text- and color-rendering classes
 3. util.py
