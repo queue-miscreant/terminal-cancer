@@ -2,15 +2,16 @@ display.py
 ====================
 
 The module display.py is intended to perform two things:
-	* efficiently store and apply text coloring and effects, and
-	* break strings into a number of lines that are smaller than a certain column width.
+* efficiently store and apply text coloring and effects, and
+* break strings into a number of lines that are smaller than a certain column width.
+
 It is an abstraction over [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
 
 
 Exceptions
 ----------
-This module defines a single exception, `DisplayException`.
-Use this to catch potential errors in functions like getColor.
+This module defines a single exception, `DisplayException`, used internally
+when displays go wrong
 
 
 Bare Functions
@@ -22,18 +23,15 @@ but ignores ANSI escape sequences.
 For example, `collen("\x1b[mあ")` will return 2, since the character 'あ'
 occupies 2 columns, but the ANSI escape is effectively zero-width
 
-`string`: (unicode) String to find the column width of
-
+`string`: (unicode) String to find the column width of \
 `@return`: Column width
 
 
 ### `columnslice(string: str, width: int) -> int`
 Slices a `string` to column `width`.
 
-`string`: (unicode) Input string
-
-`width`: Column width to cut to
-
+`string`: (unicode) Input string \
+`width`: Column width to cut to \
 `@return`: Index of `string` that gives the best "cut"
 
 
@@ -56,6 +54,7 @@ Basic colors can be accessed by the list of valid color names:
 * "white"
 * ""
 * "none"
+
 These are in ascending order by color number (i.e, black is at index 0, and corresponds to '30').
 
 These cannot be directly used to color text.
@@ -85,13 +84,10 @@ The module also supports effects turned on and off. Predefined effects are:
 #### `colors.def_color(fore, back="none", intense=False) -> int`
 Defines a color.
 `fore`: Foreground color. Either from the list of basic colors above or an integer
-0-255 for 256-color mode.
-
+0-255 for 256-color mode. \
 `back`: Background color. Either from the list of basic colors above or an integer
-0-255 for 256-color mode.
-
-`intense`: Color intensity on/off. Some terminal emulators render intense colors as bold.
-
+0-255 for 256-color mode. \
+`intense`: Color intensity on/off. Some terminal emulators render intense colors as bold. \
 `@return`: UID corresponding to this color
 
 
@@ -100,36 +96,29 @@ Define an effect.
 Intended for zero-column-width strings like ANSI escapes, but not strictly enforced.
 Text in Coloring objects may render improperly.
 
-`effect_on`: The string used to turn the effect on
-
-`effect_off`: The string used to turn the effect off
-
+`effect_on`: The string used to turn the effect on \
+`effect_off`: The string used to turn the effect off \
 `@return`: UID corresponding to this effect
 
 
 #### `colors.two56(color, too_black=0.1, too_white=0.9, reweight=None) -> int`
-Retrieve a 256-color mode color.
+Retrieve a 256-color mode color UID.
 
 `color`: Either an int directly referring to a 256-color,
-	a string like "[#]FFFFFF", or a 3-tuple/list
-
+	a string like "[#]FFFFFF", or a 3-tuple/list \
 `too_black`: If the average RGB value (range 0-1) should fall below this value,
-	the default color will be returned as fallback
-
+	the default color will be returned as fallback \
 `too_white`: If the average RGB value (range 0-1) should go above this value,
-	the default color will be returned as fallback
-
+	the default color will be returned as fallback \
 `reweight`: If a unary callable is supplied, then the RGB values (range 0-1) will
-	be modified by this function before being converted to the final color number
-
-`@return`: If 256-color mod is enabled, the color number closest to `color`
+	be modified by this function before being converted to the final color number \
+`@return`: If 256-color mode is enabled, the color UID closest to `color`
 	Otherwise, the default color will be returned as fallback
 
 #### `grayscale(gray) -> int`
 Retrieve a grayscale from 256-color mode colors.
 
-`gray`: An integer from 0 (black) to 23 (white), representing the steps of grayscale
-
+`gray`: An integer from 0 (black) to 23 (white), representing the steps of grayscale \
 `@return`: If 256-color mod is enabled, the grayscale step
 	Otherwise, the default color will be returned as fallback
 
@@ -166,8 +155,7 @@ Modifies `coloring` to add the effects of of the RHS.
 
 #### `Coloring(string: str, remove_fractur=True)`
 
-`string`: String to wrap
-
+`string`: String to wrap \
 `remove_fractur`: If enabled, will convert "bad" fractur characters whose
 column widths cause problems down to ASCII equivalents
 
@@ -177,11 +165,9 @@ Clear all stored formatting.
 #### `Coloring.sub_slice(sub: str, start, end=None)`
 Splice in string `sub` as a replacement for `str(self)[start:end]`
 
-`sub`: String to insert
-
+`sub`: String to insert \
 `start`: String index to start splice at.
-	Negative indices can be used to refer to positions relative to the end of the string
-
+	Negative indices can be used to refer to positions relative to the end of the string \
 `end`: String index to end splice at
 	Negative indices can be used to refer to positions relative to the end of the string
 	`None` refers to the end of the string
@@ -195,8 +181,7 @@ Whether or not the instance has a color/effect at string index `position`
 Inserts a `color` at a `position` in the string.
 Note that positions beyond it will have that color until a new color is described
 
-`position`: The string index at which the color should appear
-
+`position`: The string index at which the color should appear \
 `color`: A valid color UID returned by `colors.def_color` or `colors.two56`
 
 #### `Coloring.effect_range(start: int, end: int, effect: int)`
@@ -204,11 +189,9 @@ Adds an `effect` to string slice `[start:end]`.
 For example, `effectRange(0,-1,0)` will make the entire string excluding the
 last character reverse video.
 
-`start`: String index effect begins at
-
-`end`: String index effect ends at
-
-`effect`: A valid effect UID returned by `colors.def_effect`
+`start`: String index effect begins at \
+`end`: String index effect ends at \
+`effect`: A valid effect UID returned by `colors.def_effect` \
 
 #### `Coloring.add_global_effect(effect: int, pos=0)`
 Turn an effect until the end of the string.
@@ -217,8 +200,7 @@ Shorthand for `effectRange(pos, len(str), effect)` where `str` is the string con
 #### `Coloring.find_color(end: int)`
 Find the most recent color before index `end`
 
-`end`: String index to query color at
-
+`end`: String index to query color at \
 `@return`: Color UID that applies before `end`
 
 
@@ -231,22 +213,17 @@ e.g.: Say we have a completely green string "(Green)" that contains a matching s
 If we apply a color that corresponds to blue, then the match will be drawn in blue while
 maintaining the green color after the match ends; i.e. "(Green)(Blue)(Green)"
 
-`regex`: Compiled regex pattern 
-
+`regex`: Compiled regex pattern \
 `group_func`: An integer or unary callable that returns an integer.
-	The callable should expect the matching group of the regex.
-
-`fallback` is the fallback color if no colors exist before the match.
-
+	The callable should expect the matching group of the regex. \
+`fallback` is the fallback color if no colors exist before the match. \
 `group`: Regex group to apply the color to.
 
 #### `Coloring.effect_by_regex(regex: re.Pattern, effect, group=0)`
 Adds an effect with effect number `effect` to the regex match.
 
-`regex`: Compiled regex pattern 
-
-`effect`: A valid effect UID returned by `colors.def_effect`
-
+`regex`: Compiled regex pattern \
+`effect`: A valid effect UID returned by `colors.def_effect` \
 `group`: The regex group to apply the effect to
 
 
@@ -254,12 +231,9 @@ Adds an effect with effect number `effect` to the regex match.
 Applies coloring and effects to the contained string and
 breaks it into lines with column width no greater than `length`
 
-`length`: Maximum column width to allow
-
-`outdent`: A leading string for all lines besides the first
-
-`keep_empty`: Whether "empty" lines are kept in the returned list
-
+`length`: Maximum column width to allow \
+`outdent`: A leading string for all lines besides the first \
+`keep_empty`: Whether "empty" lines are kept in the returned list \
 `@return`: A list of formatted strings, each of column width at most `length`
 
 
@@ -278,11 +252,9 @@ Additionally, indicator lamps can be added to the "right side" for richer displa
 #### `add_indicator(sub: str, color=None, effect=None)`
 Add an indicator lamp-esque display `sub` to displayed right-justified.
 
-`sub`: String to add to be right-justified
-
+`sub`: String to add to be right-justified \
 `color`: Color to apply to the right side
-	Either None or a valid color UID returned by `colors.def_color` or `colors.two56`
-
+	Either None or a valid color UID returned by `colors.def_color` or `colors.two56` \
 `effect`: Effect to apply to the right side
 	Either None or a valid effect UID returned by `colors.def_effect`
 
@@ -290,12 +262,9 @@ Add an indicator lamp-esque display `sub` to displayed right-justified.
 #### `justify(length, justchar=' ', ensure_indicator=2) -> str`
 Formats the string contained, ellipsized or padded to `length`
 
-`length`: Desired column width
-
-`justchar`: Character to use as padding to the specified width `length`
-
-`ensure_indicator`: the number of columns to reserve for the indicator lamp, if one exists
-
+`length`: Desired column width \
+`justchar`: Character to use as padding to the specified width `length` \
+`ensure_indicator`: the number of columns to reserve for the indicator lamp, if one exists \
 `@return`: Formatted string, with column width `length`
 
 
@@ -310,16 +279,14 @@ Generally, when the cursor moves or text is modified, the `_onchanged` callback 
 
 #### `Scrollable(width: int, string="")`
 
-`width`: Column width of the display.
-
+`width`: Column width of the display. \
 `string`: String to wrap.
 
 
 #### `Scrollable.show(password=False) -> str`
 Retrieve a "good slice" of the string contained.
 
-`password`: Whether or not to draw
-
+`password`: Whether or not to draw \
 `@return`: The aforementioned "good slice". If printed, the terminal cursor position will
 	be saved at the location of the scrollable's cursor.
 
