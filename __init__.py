@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-'''Client package with customizable display and link opening capabilities.'''
+'''Terminal display package with link opening capabilities.'''
+#TODO As nice as key_handlers are, just having a config file would work better
 
 from .base import *
 from .input import *
