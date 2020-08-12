@@ -120,15 +120,15 @@ class _ColorManager: #pylint: disable=too-many-instance-attributes
 		]
 		self._predefined = len(self.colors)
 		#names
-		self.default = self.raw_num(0)
-		self.system = self.raw_num(1)
-		self.red_text = self.raw_num(2)
-		self.green_text = self.raw_num(3)
-		self.yellow_text = self.raw_num(4)
+		self.default = 0 - self._predefined
+		self.system = 1 - self._predefined
+		self.red_text = 2 - self._predefined
+		self.green_text = 3 - self._predefined
+		self.yellow_text = 4 - self._predefined
 
 		#a tuple containing 'on' and 'off'
 		self.effects =	[
-			  (SELECT, "\x1b[27m")
+			  (SELECT, "\x1b[27m") #TODO this is bad for selectable text i.e. in ChatOverlays
 			, ("\x1b[4m", "\x1b[24m")
 		]
 		self._effects_bits = (1 << len(self.effects))-1
@@ -177,16 +177,6 @@ class _ColorManager: #pylint: disable=too-many-instance-attributes
 		self._effects_bits = (self._effects_bits << 1) | 1
 		return len(self.effects)-1
 
-	def raw_num(self, pair_number):
-		'''
-		Get raw pair number, without respect to number of predefined ones.
-		Use in conjunction with getColor or Coloring.insert_color to use
-		predefined colors
-		'''
-		if pair_number < 0:
-			raise DisplayException("raw numbers may not be below 0")
-		return pair_number - self.predefined
-
 	def two56(self, color, too_black=0.1, too_white=0.9, reweight=None):
 		'''
 		Convert a hex string, 3-tuple, or pre-calculated int to 256 color
@@ -216,43 +206,21 @@ class _ColorManager: #pylint: disable=too-many-instance-attributes
 			avg = sum(rgbf)/3
 			if callable(reweight):
 				rgbf = reweight(rgbf)
-			elif reweight is not None:
-				rgbf = self.reweight(rgbf)
 			#too white or too black
 			elif avg < too_black or avg > too_white:
-				return self.default
+				raise ValueError
 
 			if sum((i - avg)**2 for i in rgbf)**0.5 < 0.05:
 				return self.grayscale(int(avg*24))
 
 			return self._two56_start + 16 + \
 				sum(map(lambda x, y: int(x*5)*y, rgbf, [36, 6, 1]))
-		except (AttributeError, TypeError):
+		except (AttributeError, TypeError, ValueError):
 			return self.default
 
-	@staticmethod
-	def reweight(rgbf):
-		avg = sum(rgbf) / 3
-		rew = lambda x, y: [i*j for i, j in zip(x, y)]
-
-		if avg < 0.1:
-			rgbf = rew(rgbf, [1.25, 1.25, 1.25])
-		elif avg > 0.9:
-			rgbf = rew(rgbf, [0.75, 0.75, 0.75])
-		avg = sum(rgbf) / 3
-		unblueness = sum(rgbf) - rgbf[2]
-		if abs(unblueness - avg) < 5e-3: #dark blue admixtures
-			rgbf = rew(rgbf, [1.20, 1.20, 1.10])
-		elif unblueness < 0.15: #VERY blue colors
-			if rgbf[2] < 0.35:
-				rgbf = [0.2, 0.2, 0.6] #this is a bad color, but it's the best I can do
-			else:
-				rgbf[1] = rgbf[2]/4
-		return rgbf
-
-	def grayscale(self, color):
+	def grayscale(self, gray):
 		'''Gets a 256-color grayscale `color` from 0 (black) to 24 (white)'''
-		color = min(max(color, 0), 24)
+		color = min(max(gray, 0), 24)
 		return self.two56(color + 232) #magic, but whatever
 colors = _ColorManager() #pylint: disable=invalid-name
 
